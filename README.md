@@ -1,5 +1,7 @@
 # Skribbl Clone
 
+**Live Demo:** https://skribble-clone-yns3.onrender.com/
+
 A real-time multiplayer drawing and guessing game inspired by Skribbl.io. Create a room, invite friends, take turns drawing, and guess the secret word before time runs out.
 
 ## Features
@@ -36,6 +38,19 @@ This app uses a persistent Socket.IO server, so deploy it as a Render **Web Serv
 - `server.js` — Express server, game and room logic, and Socket.IO event handling
 - `src/` — React and TypeScript client
 - `render.yaml` — Render deployment configuration
+
+## Architecture
+
+- **WebSockets (Socket.IO):** Drawing, guesses, chat and game state all sync in real time. The client emits events
+  (`draw_start`, `draw_move`, `draw_end`, `guess`, `word_chosen`...) and the server validates and broadcasts them.
+- **Canvas:** Strokes are captured with pointer events and sent as normalised (0-1) coordinates, so every screen size
+  renders the same. The server stores strokes, so late joiners get the full drawing and undo works for everyone.
+- **Game logic (OOP):** `Player`, `Game` (rounds, turn order, word choice, hints, scoring), `Room` (players, settings,
+  broadcast, moderation) and `MessageHandler` (routes all socket events).
+- **Word matching:** guesses are trimmed and lower-cased; an exact match scores, and a one-letter-off guess gets a private "close!" hint.
+- **Scoring:** guesser gets `50 + 450 x timeLeft/drawTime`; the drawer gets +30 for each correct guess.
+- **Deployment:** one Node service serves both the built React app and the Socket.IO server. Render supports WebSockets;
+  Vercel and Netlify do not host long-lived WebSocket servers, so they would need a separate backend.
 
 ## Notes
 
